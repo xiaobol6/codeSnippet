@@ -32,18 +32,21 @@ def showPlt(srcinfo, raw):
 
 def showCV(srcinfo):
     size = os.path.getsize(srcinfo["file"])
-    # 定义像素值的格式，这里使用无符号整型（'I'），每个值占4个字节
+    # 定义像素值的格式
     if srcinfo["depth"] > 16:
         bpp = 32
         pixel_format = 'I'
+        len = size >> 2
     elif srcinfo["depth"] > 8:
         bpp = 16
         pixel_format = 'H'
+        len = size >> 1
     else:
         bpp = 8
         pixel_format = 'B'
+        len = size >> 0
     # 拼接格式字符串以表示整个列表
-    pixels_format = pixel_format * (size // 2)
+    pixels_format = pixel_format * len
     with open(srcinfo["file"], 'rb') as rfd:
         if srcinfo["endian"]:
             unpacked_pixels = struct.unpack('>' + pixels_format, rfd.read())
