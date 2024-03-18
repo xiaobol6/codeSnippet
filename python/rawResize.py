@@ -156,10 +156,10 @@ def read_raw(srcinfo):
 
 def write_raw(dstraw, dstinfo):
     # 定义像素值的格式
-    if srcinfo["depth"] > 16:
+    if dstinfo["depth"] > 16:
         bpp = 32
         pixel_format = 'I'
-    elif srcinfo["depth"] > 8:
+    elif dstinfo["depth"] > 8:
         bpp = 16
         pixel_format = 'H'
     else:
@@ -180,6 +180,8 @@ def write_raw(dstraw, dstinfo):
 
 
 def bilinear_interpolation(src, src_w, src_h, dst_w, dst_h):
+    if src_w == dst_w and src_h == dst_h:
+        return src
     # 中心对齐，目标像素在原图上的坐标
     width_src_p = np.array([(i + 0.5) * src_w / dst_w - 0.5 for i in range(dst_w)])
     height_src_p = np.array([(i + 0.5) * src_h / dst_h - 0.5 for i in range(dst_h)])
