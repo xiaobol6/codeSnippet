@@ -56,6 +56,7 @@ def showraw(raw, srcinfo):
         else:
             rgbImg = cv2.cvtColor(raw.astype("uint8"), cv2.COLOR_BayerBG2BGR)
         cv2.imshow("img", rgbImg)
+        cv2.imwrite(srcinfo["file"] + ".jpg", rgbImg)
         cv2.waitKey(0)
         cv2.destroyAllWindows()
     pass
@@ -116,7 +117,7 @@ def cmd_line_parse(srcinfo, dstinfo):
         elif opt_name in ('-e', '--endian'):
             integer_parse(opt_value, "endian", srcinfo, dstinfo)
         elif opt_name in ('-s', '--show'):
-            srcinfo["show"] = opt_value
+            srcinfo["show"] = dstinfo["show"] = opt_value
         elif opt_name in ('-H', '--help'):
             useage()
             return True
@@ -166,7 +167,12 @@ def write_raw(dstraw, dstinfo):
         bpp = 8
         pixel_format = 'B'
     pixels_format = pixel_format * dstinfo["width"]
+    last = 0
     with open(dstinfo["file"], 'wb') as wfd:
+        # for i in range(len(dstraw)):
+        #     if last != len(dstraw[i]):
+        #         print(last, len(dstraw[i]), dstraw.dtype)
+        #         last = len(dstraw[i])
         for line in dstraw:
             if dstinfo["endian"]:
                 # 使用'>'前缀指定大端字节序，并将像素值列表打包为二进制数据
@@ -174,7 +180,6 @@ def write_raw(dstraw, dstinfo):
             else:
                 # 使用'<'前缀指定小端字节序，并将像素值列表打包为二进制数据
                 wfd.write(struct.pack('<' + pixels_format, *line))
-            pass
         pass
     pass
 
@@ -240,7 +245,9 @@ def rawsclaer(srcraw, srcinfo, dstraw, dstinfo):
     dstraw[1::2, 1::2] = dst_11
     # 先纠正单pixel 位深
     if dstinfo["depth"] > srcinfo["depth"]:
+        # print("depth before", [hex(x) for x in dstraw[0, :10]])
         dstraw = dstraw << (dstinfo["depth"] - srcinfo["depth"])
+        # print("depth after", [hex(x) for x in dstraw[0, :10]])
     else:
         dstraw = dstraw >> (srcinfo["depth"] - dstinfo["depth"])
     # 再纠正msb、lsb数据位
@@ -250,14 +257,14 @@ def rawsclaer(srcraw, srcinfo, dstraw, dstinfo):
         bpp = 16
     else:
         bpp = 8
-    # print(dstraw[:1,:10])
+    # print("msb before", [hex(x) for x in dstraw[0, :10]])
     if dstinfo["msb"]:
         dstraw = dstraw << (bpp - dstinfo["depth"]) if bpp > dstinfo["depth"] else dstraw
+    # print("msb after", [hex(x) for x in dstraw[0, :10]])
     write_raw(dstraw, dstinfo)
-    # print(dstraw[:1, :10])
     #
-    showraw(dstraw, dstinfo)
-
+    if dstinfo["show"] != "na":
+        showraw(dstraw, dstinfo)
 
 
 if __name__ == '__main__':
@@ -271,7 +278,7 @@ if __name__ == '__main__':
     #
     srcraw = read_raw(srcinfo)
     #
-    dstraw = np.zeros((dstinfo["height"], dstinfo["width"]), dtype=np.int32)
+    dstraw = np.zeros((dstinfo["height"], dstinfo["width"]), dtype=np.uint32)
     rawsclaer(srcraw, srcinfo, dstraw, dstinfo)
     #
     # showraw(srcraw, srcinfo)
