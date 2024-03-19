@@ -44,9 +44,11 @@ def showCV(srcinfo):
     # 创建一个指定大小的图形，设置分辨率和背景色
     bgr_data = cv2.cvtColor(raw.astype(np.uint8), enum_format[srcinfo["cfa"].upper()])
     cv2.imwrite(srcinfo["file"] + ".jpg", bgr_data)
-    cv2.imshow("img", bgr_data)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+    if srcinfo["show"]:
+        bgr_data = cv2.resize(bgr_data, (800, 600))
+        cv2.imshow("img", bgr_data)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
     pass
 
 
@@ -67,8 +69,9 @@ def useage():
 
 
 def cmd_line_parse(srcinfo):
-    opts, args = getopt.getopt(sys.argv[1:], '-i:-w:-h:-d:-p:-c:-m:-e:-H',
-                               ['input=', 'width=', 'height=', 'depth=', 'pack=', 'cfa=', 'msb=', 'endian=', "help"])
+    opts, args = getopt.getopt(sys.argv[1:], '-i:-w:-h:-d:-p:-c:-m:-e:-s:-H',
+                               ['input=', 'width=', 'height=', 'depth=', 'pack=', 'cfa=', 'msb=', 'endian=', 'show=',
+                                "help"])
     for opt_name, opt_value in opts:
         if opt_name in ('-i', '--input'):
             srcinfo["file"] = opt_value
@@ -86,6 +89,8 @@ def cmd_line_parse(srcinfo):
             srcinfo["msb"] = int(opt_value)
         elif opt_name in ('-e', '--endian'):
             srcinfo["endian"] = int(opt_value)
+        elif opt_name in ('-s', '--show'):
+            srcinfo["show"] = int(opt_value)
         elif opt_name in ('-H', '--help'):
             useage()
             return True
@@ -97,7 +102,7 @@ def cmd_line_parse(srcinfo):
 
 
 if __name__ == '__main__':
-    srcinfo = {"depth": 8, "cfa": "NV21"}
+    srcinfo = {"depth": 8, "cfa": "NV21", "show": 0}
     ret = cmd_line_parse(srcinfo)
     if ret:
         exit()
